@@ -1,0 +1,35 @@
+name: CI
+on: [push, pull_request]
+jobs:
+    test:
+        runs-on: ${{ matrix.os }}
+        strategy:
+            fail-fast: false
+            matrix:
+                os:
+                  - ubuntu-20.04
+                  - windows-2022
+
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v3
+
+          - name: Install GCC 8
+            uses: egor-tensin/setup-gcc@v1.3
+            with:
+                version: 8
+                platform: x64
+                cc: 1
+
+          - run: c++ --version
+
+          - name: Install Python
+            uses: actions/setup-python@v4
+            with:
+                python-version: '3.x'
+                architecture: x64
+
+          - run: python --version
+
+          - name: Compile and run tests
+            run: cd test && python main.py
