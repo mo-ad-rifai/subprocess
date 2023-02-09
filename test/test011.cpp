@@ -10,7 +10,7 @@ main(int argc, char *argv[])
 {
 	// Run `python' and give it the content of a file.
 	auto r = sp::Popen()
-		.Arguments({"python", "-c", "print('%.5f' % input())"})
+		.Arguments({"python", "-c", "print('%.5f' % eval(input()))"})
 		// StdIn, StdOut, StdErr can be: not set, FILE*, file descriptor, sp::PIPE, or sp::DEVNUL
 		.StdIn({fopen("test011.ref.in", "r"), true})// `true' requests the automatic closing of the file when the object if destroyed.
 		.StdOut(sp::PIPE)

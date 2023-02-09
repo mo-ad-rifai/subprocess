@@ -10,7 +10,7 @@ main(int argc, char *argv[])
 	using namespace std::string_literals;
 	// Run `python' and give it a mathematical expression through stdin.
 	auto r = sp::Popen()
-		.Arguments({"python", "-c", "print('%.5f' % input())"})
+		.Arguments({"python", "-c", "print('%.5f' % eval(input()))"})
 		.StdIn(sp::PIPE)
 		.Communicate("355.0 / 113.0"s);
 	return 0;

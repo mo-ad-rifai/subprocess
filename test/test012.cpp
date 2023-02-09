@@ -10,7 +10,7 @@ main(int argc, char *argv[])
 {
 	// Run `python' and give it the content of a file. The output is redirected to a file and the errors are discarded.
 	auto r = sp::Popen()
-		.Arguments({"python", "-c", "print('%.5f' % input())"})
+		.Arguments({"python", "-c", "print('%.5f' % eval(input()))"})
 		.StdIn({fopen("test012.ref.in", "r"), true})
 		.StdOut({fopen("test012.out", "w"), true})
 		.StdErr(sp::DEVNUL)
