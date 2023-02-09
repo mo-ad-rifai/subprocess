@@ -14,7 +14,7 @@ jobs:
           - name: Checkout
             uses: actions/checkout@v3
 
-          - name: Set up MinGW
+          - name: Install MinGW
             if: runner.os == 'Windows'
             uses: egor-tensin/setup-mingw@v2
             with:
@@ -42,3 +42,6 @@ jobs:
 
           - name: Compile and run tests
             run: cd test && python main.py
+            env:
+                PYTHONIOENCODING: utf-8
+                PYTHONLEGACYWINDOWSSTDIO: utf-8
