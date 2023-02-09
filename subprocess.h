@@ -194,38 +194,96 @@ std::unique_ptr<char*[], decltype (&_deleteTwoArrays)>
 shellSplitted(const char* str)
 {
     // assuming str != nullptr
-    auto ss = strlen(str) + 1;
+    auto sizeof_str = strlen(str) + 1;
     // copy str while substituting whitespace
-    auto s = new char[ss];
-    bool substituted = false;
-    auto vs = 1u;
-    auto e = s + ss;
-    for (auto p = s; p != e; ++p, ++str) {
-        if (*str == ' ' or *str == '\t') {
-            *p = '\0';
-            substituted = true;
-            continue;
-        }
-        if (substituted) {
-            substituted = false;
-            ++vs;
-        }
-        *p = *str;
+    auto s = new char[sizeof_str];
+    bool substitution = false;
+    auto argc = 1u;
+	bool single_quote = false;
+	bool double_quote = false;
+	bool back_slash = false;
+    auto end = str + sizeof_str;
+    for (auto p = s; str != end; ++p, ++str) {
+		bool back_slash1 = back_slash;
+		back_slash = false;
+		bool substitution1 = substitution;
+		substitution = false;
+		switch (*str) {
+			case ' ':
+			case '\t':
+				if (single_quote or double_quote) {
+					*p = *str;
+				} else {
+					*p = '\0';
+					if (not substitution1) {
+						++argc;
+					}
+					substitution = true;
+				}
+				break;
+			case '\\':
+				if (single_quote) {
+					*p = '\\';
+				} else if (back_slash1) {// escaped back slash
+					*p = '\\';
+					//back_slash = false;
+				} else {
+					--p;
+					back_slash = true;
+				}
+				break;
+			case '\'':
+				if (back_slash1) {// escaped single quote
+					*p = '\'';
+				} else if (single_quote) {// single quote end
+					--p;
+					single_quote = false;
+				} else if (not double_quote) {// single quote begin
+					--p;
+					single_quote = true;
+				} else {
+					*p = '\'';
+				}
+				break;
+			case '"':
+				if (back_slash1) {// escaped double quote
+					*p = '"';
+				} else if (double_quote) {// double quote end
+					--p;
+					double_quote = false;
+				} else if (not single_quote) {// double quote begin
+					--p;
+					double_quote = true;
+				} else {
+					*p = '"';
+				}
+				break;
+			default:
+				if (double_quote and back_slash) {
+					*p = '\\';
+					++p;
+				}
+				*p = *str;
+				if (substitution1 and *str == '\0') {// str ended with white space
+					--argc;
+				}
+				break;
+		}
     }
     // record the positions of the strings
-    auto r = new char*[vs + 1];
-    auto p = r;
+    auto argv = new char*[argc + 1];
+    auto p = argv;
     *p = s;
     ++p;
-    --e;
-    for (++s; s != e; ++s) {
-        if (s[-1] == '\0') {
+    end = s + sizeof_str - 1;
+    for (++s; s < end; ++s) {
+        if (s[-1] == '\0' and s[0] != '\0') {
             *p = s;
             ++p;
         }
     }
     *p = nullptr;
-    return {r, _deleteTwoArrays};
+    return {argv, _deleteTwoArrays};
 }
 #endif
 
