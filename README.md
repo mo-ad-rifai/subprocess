@@ -7,10 +7,10 @@ Supported environments: Windows, POSIX.
 
 #### Use Examples
 ```cpp
-sp::Popen("cmd.exe /c echo Hello world!").Wait();
+sp::Popen{{"cmd.exe /c echo Hello world!"}}.Wait();
 ```
 ```cpp
-sp::Popen({"cmd.exe", "/c", "echo", "Hello world!"}).Wait();
+sp::Popen{{"cmd.exe", "/c", "echo", "Hello world!"}, true}.Wait();
 ```
 ```cpp
 sp::Popen().Command("cmd.exe /c echo Hello world!").Wait();
@@ -114,7 +114,7 @@ rtrimmed(std::string s) {
 #### Compilation Requirements
 GCC 8 or newer
 
-`-std=c++17` or newer
+C++17 or newer
 
 `-pthread`
 

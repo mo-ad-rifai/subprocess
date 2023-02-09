@@ -127,6 +127,11 @@ void
 _deleteString(std::string* s)
 { delete s; }
 
+template<class T>
+void
+_noopDeleter(T* s)
+{}
+
 std::string
 shellEscaped(const std::string& arg)
 {
@@ -479,7 +484,7 @@ namespace Pipe
             ssize_t size;
             size_t length = 0;
             bytes.resize(4096);
-            while ((size = Receive(bytes.data() + length, 4096)) > 0) {
+            while ((size = Receive(const_cast<byte*>(bytes.data()) + length, 4096)) > 0) {
                 length += static_cast<size_t>(size);
                 bytes.resize(length + 4096);
             }
@@ -706,7 +711,7 @@ public:
         _receiver.reset(pipe.first);
         _sender.reset(pipe.second);
 #ifdef _WIN32
-        // disable inheritence of _sender by child process
+        // disable inheritance of _sender by child process
         _sender->MakeInheritable(false);
 #endif
     }
@@ -779,7 +784,7 @@ public:
         _receiver.reset(pipe.first);
         _sender.reset(pipe.second);
 #ifdef _WIN32
-        // disable inheritence of _receiver by child process
+        // disable inheritance of _receiver by child process
         _receiver->MakeInheritable(false);
 #endif
     }
@@ -857,7 +862,7 @@ public:
         _receiver.reset(pipe.first);
         _sender.reset(pipe.second);
 #ifdef _WIN32
-        // disable inheritence of _receiver by child process
+        // disable inheritance of _receiver by child process
         _receiver->MakeInheritable(false);
 #endif
     }
@@ -1321,7 +1326,7 @@ protected:
     _GetCommand()
     {
         if (not _args_is_seq) {
-            return {&_args.front(), nullptr};
+            return {&_args.front(), _noopDeleter};
         }
         auto s = new std::string(shellEscaped(_args.front()));
         auto i = _args.cbegin() + 1, e = _args.cend();
@@ -1455,9 +1460,9 @@ protected:
 /**
  * \example subprocess.h
  * \code
- * sp::Popen("cmd.exe /c echo Hello world!").Wait();
+ * sp::Popen{{"cmd.exe /c echo Hello world!"}}.Wait();
  *
- * sp::Popen({"cmd.exe", "/c", "echo", "Hello world!"}).Wait();
+ * sp::Popen{{"cmd.exe", "/c", "echo", "Hello world!"}, true}.Wait();
  *
  * sp::Popen().Command("cmd.exe /c echo Hello world!").Wait();
  *
