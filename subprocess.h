@@ -123,14 +123,15 @@ public:
     }
 };
 
+template<class T>
 void
-_deleteString(std::string* s)
-{ delete s; }
+_noopDelete(T* s)
+{}
 
 template<class T>
 void
-_noopDeleter(T* s)
-{}
+_delete(T* s)
+{ delete s; }
 
 std::string
 shellEscaped(const std::string& arg)
@@ -284,6 +285,20 @@ shellSplitted(const char* str)
     }
     *p = nullptr;
     return {argv, _deleteTwoArrays};
+}
+
+void
+_deletePosixSpawnFileActions(posix_spawn_file_actions_t* fa)
+{
+	posix_spawn_file_actions_destroy(fa);
+	delete fa;
+}
+
+void
+_deletePosixSpawnattr(posix_spawnattr_t* sa)
+{
+	posix_spawnattr_destroy(sa);
+	delete sa;
 }
 #endif
 
@@ -1384,20 +1399,20 @@ protected:
     _GetCommand()
     {
         if (not _args_is_seq) {
-            return {&_args.front(), _noopDeleter};
+            return {&_args.front(), _noopDelete};
         }
         auto s = new std::string(shellEscaped(_args.front()));
         auto i = _args.cbegin() + 1, e = _args.cend();
         for (; i != e; ++i) {
             s->append(" " + shellEscaped(*i));
         }
-        return {s, _deleteString};
+        return {s, _delete};
     }
 
     std::unique_ptr<char[]>
     _GetEnvironment(Popen& p) const;
 #else
-    std::unique_ptr<posix_spawn_file_actions_t, decltype (&posix_spawn_file_actions_destroy)>
+    std::unique_ptr<posix_spawn_file_actions_t, decltype (&_deletePosixSpawnFileActions)>
     _GetFileActions()
     {
         bool v0 = _std_in .Sender  () != nullptr and _std_in .Sender  ()->IsValid();
@@ -1436,10 +1451,10 @@ protected:
                 posix_spawn_file_actions_addclose(actions, i);
             }
         }
-        return {actions, posix_spawn_file_actions_destroy};
+        return {actions, _deletePosixSpawnFileActions};
     }
 
-    std::unique_ptr<posix_spawnattr_t, decltype (&posix_spawnattr_destroy)>
+    std::unique_ptr<posix_spawnattr_t, decltype (&_deletePosixSpawnattr)>
     _GetAttributes()
     {
         if (not _restore_signals) {
@@ -1460,7 +1475,7 @@ protected:
         sigaddset(&set, SIGXFSZ);
 #   endif
         posix_spawnattr_setsigdefault(attr, &set);
-        return {attr, posix_spawnattr_destroy};
+        return {attr, _deletePosixSpawnattr};
     }
 
     std::unique_ptr<char*[], void (*)(char**)>
